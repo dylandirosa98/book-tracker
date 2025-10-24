@@ -346,31 +346,99 @@
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
+            margin-bottom: 15px;
         }
 
-        .btn-export, .btn-import {
+        .btn-export, .btn-import, .btn-copy, .btn-paste-show {
             padding: 12px 30px;
             font-size: 0.95rem;
         }
 
-        .btn-export {
+        .btn-copy {
             background-color: #1565c0;
         }
 
-        .btn-export:hover {
+        .btn-copy:hover {
             background-color: #1976d2;
         }
 
-        .btn-import {
+        .btn-paste-show {
             background-color: #2e7d32;
         }
 
-        .btn-import:hover {
+        .btn-paste-show:hover {
             background-color: #388e3c;
+        }
+
+        .btn-export {
+            background-color: #616161;
+        }
+
+        .btn-export:hover {
+            background-color: #757575;
+        }
+
+        .btn-import {
+            background-color: #616161;
+        }
+
+        .btn-import:hover {
+            background-color: #757575;
         }
 
         #importFile {
             display: none;
+        }
+
+        .data-display {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .data-display.active {
+            display: block;
+        }
+
+        .data-display textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #8b7355;
+            background-color: #f9f7f4;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #3e2723;
+            resize: vertical;
+        }
+
+        .data-display-buttons {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-close {
+            background-color: #757575;
+        }
+
+        .btn-close:hover {
+            background-color: #9e9e9e;
+        }
+
+        .btn-paste-import {
+            background-color: #2e7d32;
+        }
+
+        .btn-paste-import:hover {
+            background-color: #388e3c;
+        }
+
+        .divider {
+            margin: 20px 0;
+            text-align: center;
+            color: #8b7355;
+            font-style: italic;
+            font-size: 0.9rem;
         }
 
         @media (max-width: 768px) {
@@ -405,10 +473,35 @@
 
         <div class="data-management">
             <h2>Data Management</h2>
-            <p>Export your library data to save a backup, or import data from another device.</p>
+            <p>Transfer your library data between devices - just copy and paste!</p>
             <div class="data-actions">
-                <button class="btn-export" onclick="bookTracker.exportData()">Export Library Data</button>
-                <button class="btn-import" onclick="document.getElementById('importFile').click()">Import Library Data</button>
+                <button class="btn-copy" onclick="bookTracker.showCopyData()">📋 Copy Data</button>
+                <button class="btn-paste-show" onclick="bookTracker.showPasteArea()">📥 Paste Data</button>
+            </div>
+
+            <div id="copyDataArea" class="data-display">
+                <label style="font-weight: bold; margin-bottom: 10px; display: block; color: #5d4037;">Your Library Data - Copy this text:</label>
+                <textarea id="dataOutput" readonly onclick="this.select()"></textarea>
+                <div class="data-display-buttons">
+                    <button class="btn-copy" onclick="bookTracker.copyToClipboard()">Copy to Clipboard</button>
+                    <button class="btn-close" onclick="bookTracker.hideDataDisplays()">Close</button>
+                </div>
+            </div>
+
+            <div id="pasteDataArea" class="data-display">
+                <label style="font-weight: bold; margin-bottom: 10px; display: block; color: #5d4037;">Paste your library data here:</label>
+                <textarea id="dataInput" placeholder="Paste your exported library data here..."></textarea>
+                <div class="data-display-buttons">
+                    <button class="btn-paste-import" onclick="bookTracker.pasteImport()">Import Data</button>
+                    <button class="btn-close" onclick="bookTracker.hideDataDisplays()">Close</button>
+                </div>
+            </div>
+
+            <div class="divider">or use file import/export</div>
+
+            <div class="data-actions">
+                <button class="btn-export" onclick="bookTracker.exportData()">Download File</button>
+                <button class="btn-import" onclick="document.getElementById('importFile').click()">Upload File</button>
                 <input type="file" id="importFile" accept=".json" onchange="bookTracker.importData(event)">
             </div>
         </div>
@@ -609,6 +702,70 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            showCopyData() {
+                this.hideDataDisplays();
+                const dataStr = JSON.stringify(this.books, null, 2);
+                document.getElementById('dataOutput').value = dataStr;
+                document.getElementById('copyDataArea').classList.add('active');
+            }
+
+            showPasteArea() {
+                this.hideDataDisplays();
+                document.getElementById('pasteDataArea').classList.add('active');
+                document.getElementById('dataInput').value = '';
+            }
+
+            hideDataDisplays() {
+                document.getElementById('copyDataArea').classList.remove('active');
+                document.getElementById('pasteDataArea').classList.remove('active');
+            }
+
+            copyToClipboard() {
+                const textarea = document.getElementById('dataOutput');
+                textarea.select();
+                document.execCommand('copy');
+                alert('📋 Data copied to clipboard! Now paste it on your Vercel site.');
+            }
+
+            pasteImport() {
+                const dataInput = document.getElementById('dataInput').value.trim();
+                if (!dataInput) {
+                    alert('Please paste your library data first!');
+                    return;
+                }
+
+                try {
+                    const importedBooks = JSON.parse(dataInput);
+
+                    if (!Array.isArray(importedBooks)) {
+                        throw new Error('Invalid data format');
+                    }
+
+                    const replace = confirm(
+                        `You currently have ${this.books.length} book(s) in your library.\n\n` +
+                        `Click OK to REPLACE all books with ${importedBooks.length} imported book(s).\n` +
+                        `Click Cancel to MERGE (add to existing books).`
+                    );
+
+                    if (replace) {
+                        this.books = importedBooks;
+                    } else {
+                        importedBooks.forEach(book => {
+                            book.id = Date.now() + Math.random();
+                            this.books.push(book);
+                        });
+                    }
+
+                    this.saveBooks();
+                    this.renderBooks();
+                    this.hideDataDisplays();
+                    alert('✅ Library data imported successfully!');
+                } catch (error) {
+                    alert('❌ Error importing data. Please make sure you copied the data correctly.');
+                    console.error('Import error:', error);
+                }
             }
 
             exportData() {
