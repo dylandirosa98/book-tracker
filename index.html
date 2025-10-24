@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Library - Book Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Garamond', serif;
+            background-color: #f4f1e8;
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 39px,
+                rgba(139, 115, 85, 0.1) 39px,
+                rgba(139, 115, 85, 0.1) 40px
+            );
+            color: #3e2723;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 4px double #8b7355;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #3e2723;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: #6d4c41;
+            font-size: 1.1rem;
+        }
+
+        .add-book-section {
+            background-color: #fefdfb;
+            border: 3px solid #8b7355;
+            padding: 25px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px rgba(62, 39, 35, 0.2);
+        }
+
+        .add-book-section h2 {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #5d4037;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #8b7355;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #5d4037;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 2px solid #8b7355;
+            background-color: #fff;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            color: #3e2723;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #5d4037;
+        }
+
+        button {
+            background-color: #3e2723;
+            color: #f4f1e8;
+            border: none;
+            padding: 12px 30px;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #5d4037;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .book-card {
+            background-color: #fefdfb;
+            border: 3px solid #8b7355;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(62, 39, 35, 0.3);
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 1px solid #8b7355;
+            pointer-events: none;
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(62, 39, 35, 0.4);
+        }
+
+        .book-title {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            color: #3e2723;
+            font-weight: bold;
+        }
+
+        .book-author {
+            font-style: italic;
+            color: #6d4c41;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border: 2px solid;
+        }
+
+        .status-reading {
+            background-color: #fff3e0;
+            color: #e65100;
+            border-color: #e65100;
+        }
+
+        .status-want {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border-color: #1565c0;
+        }
+
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-color: #2e7d32;
+        }
+
+        .progress-section {
+            margin-bottom: 15px;
+        }
+
+        .page-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #5d4037;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background-color: #e0d5c7;
+            border: 2px solid #8b7355;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #8b7355;
+            background-image: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(62, 39, 35, 0.3) 10px,
+                rgba(62, 39, 35, 0.3) 20px
+            );
+            transition: width 0.3s;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-edit, .btn-delete {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn-edit {
+            background-color: #5d4037;
+        }
+
+        .btn-edit:hover {
+            background-color: #6d4c41;
+        }
+
+        .btn-delete {
+            background-color: #c62828;
+        }
+
+        .btn-delete:hover {
+            background-color: #d32f2f;
+        }
+
+        .edit-section {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f7f4;
+            border: 2px dashed #8b7355;
+            display: none;
+        }
+
+        .edit-section.active {
+            display: block;
+        }
+
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .edit-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-save, .btn-cancel {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn-save {
+            background-color: #2e7d32;
+        }
+
+        .btn-save:hover {
+            background-color: #388e3c;
+        }
+
+        .btn-cancel {
+            background-color: #757575;
+        }
+
+        .btn-cancel:hover {
+            background-color: #9e9e9e;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6d4c41;
+            font-style: italic;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Personal Library</h1>
+            <p class="subtitle">A Chronicle of Literary Journeys</p>
+        </header>
+
+        <div class="add-book-section">
+            <h2>Add New Book</h2>
+            <form id="addBookForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="author">Author</label>
+                        <input type="text" id="author" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="totalPages">Total Pages</label>
+                        <input type="number" id="totalPages" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="currentPage">Current Page</label>
+                        <input type="number" id="currentPage" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" required>
+                            <option value="Currently Reading">Currently Reading</option>
+                            <option value="Want to Read">Want to Read</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Add to Library</button>
+            </form>
+        </div>
+
+        <div id="booksContainer" class="books-grid"></div>
+    </div>
+
+    <script>
+        class BookTracker {
+            constructor() {
+                this.books = this.loadBooks();
+                this.form = document.getElementById('addBookForm');
+                this.container = document.getElementById('booksContainer');
+                this.init();
+            }
+
+            init() {
+                this.form.addEventListener('submit', (e) => this.handleAddBook(e));
+                this.renderBooks();
+            }
+
+            loadBooks() {
+                const stored = localStorage.getItem('books');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            saveBooks() {
+                localStorage.setItem('books', JSON.stringify(this.books));
+            }
+
+            handleAddBook(e) {
+                e.preventDefault();
+
+                const title = document.getElementById('title').value.trim();
+                const author = document.getElementById('author').value.trim();
+                const totalPages = parseInt(document.getElementById('totalPages').value);
+                const currentPage = parseInt(document.getElementById('currentPage').value);
+                const status = document.getElementById('status').value;
+
+                // Validation
+                if (currentPage > totalPages) {
+                    alert('Current page cannot exceed total pages!');
+                    return;
+                }
+
+                const book = {
+                    id: Date.now(),
+                    title,
+                    author,
+                    totalPages,
+                    currentPage,
+                    status
+                };
+
+                this.books.push(book);
+                this.saveBooks();
+                this.renderBooks();
+                this.form.reset();
+            }
+
+            deleteBook(id) {
+                if (confirm('Are you sure you want to remove this book from your library?')) {
+                    this.books = this.books.filter(book => book.id !== id);
+                    this.saveBooks();
+                    this.renderBooks();
+                }
+            }
+
+            toggleEdit(id) {
+                const editSection = document.getElementById(`edit-${id}`);
+                editSection.classList.toggle('active');
+            }
+
+            updateBook(id, newCurrentPage, newStatus) {
+                const book = this.books.find(b => b.id === id);
+                if (!book) return;
+
+                // Validation
+                if (newCurrentPage > book.totalPages) {
+                    alert('Current page cannot exceed total pages!');
+                    return;
+                }
+
+                book.currentPage = newCurrentPage;
+                book.status = newStatus;
+                this.saveBooks();
+                this.renderBooks();
+            }
+
+            getStatusClass(status) {
+                const statusMap = {
+                    'Currently Reading': 'status-reading',
+                    'Want to Read': 'status-want',
+                    'Completed': 'status-completed'
+                };
+                return statusMap[status] || 'status-reading';
+            }
+
+            calculateProgress(currentPage, totalPages) {
+                return Math.min(100, (currentPage / totalPages) * 100);
+            }
+
+            renderBooks() {
+                if (this.books.length === 0) {
+                    this.container.innerHTML = '<div class="empty-state">Your library awaits its first volume...</div>';
+                    return;
+                }
+
+                this.container.innerHTML = this.books.map(book => {
+                    const progress = this.calculateProgress(book.currentPage, book.totalPages);
+
+                    return `
+                        <div class="book-card">
+                            <div class="book-title">${this.escapeHtml(book.title)}</div>
+                            <div class="book-author">by ${this.escapeHtml(book.author)}</div>
+                            <span class="status-badge ${this.getStatusClass(book.status)}">${book.status}</span>
+
+                            <div class="progress-section">
+                                <div class="page-info">
+                                    <span>Page ${book.currentPage} of ${book.totalPages}</span>
+                                    <span>${progress.toFixed(0)}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progress}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="book-actions">
+                                <button class="btn-edit" onclick="bookTracker.toggleEdit(${book.id})">Edit</button>
+                                <button class="btn-delete" onclick="bookTracker.deleteBook(${book.id})">Delete</button>
+                            </div>
+
+                            <div class="edit-section" id="edit-${book.id}">
+                                <div class="edit-form">
+                                    <div class="form-group">
+                                        <label>Current Page</label>
+                                        <input type="number" id="editPage-${book.id}" value="${book.currentPage}" min="0" max="${book.totalPages}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status</label>
+                                        <select id="editStatus-${book.id}">
+                                            <option value="Currently Reading" ${book.status === 'Currently Reading' ? 'selected' : ''}>Currently Reading</option>
+                                            <option value="Want to Read" ${book.status === 'Want to Read' ? 'selected' : ''}>Want to Read</option>
+                                            <option value="Completed" ${book.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                        </select>
+                                    </div>
+                                    <div class="edit-buttons">
+                                        <button class="btn-save" onclick="bookTracker.saveEdit(${book.id})">Save</button>
+                                        <button class="btn-cancel" onclick="bookTracker.toggleEdit(${book.id})">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            saveEdit(id) {
+                const newPage = parseInt(document.getElementById(`editPage-${id}`).value);
+                const newStatus = document.getElementById(`editStatus-${id}`).value;
+                this.updateBook(id, newPage, newStatus);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the app
+        const bookTracker = new BookTracker();
+    </script>
+</body>
+</html>
